@@ -1,60 +1,65 @@
 import React from 'react';
 import { shallow } from 'enzyme';
 
-function Counter({ onClick, count }) {
+function Counter({ onIncrement, onReset, count }) {
   return (
     <div>
       <div>{count}</div>
-      <button onClick={onClick}>increment</button>
+      { count === 10
+        ? <button onClick={onReset}>reset</button>
+        : <button onClick={onIncrement}>increment</button>
+      }
     </div>
   );
 }
 
-function reduxTdd(s, render) {
-  const state = { ...s };
-  const wrapper = render(state);
-
-  function view(newState) {
-    const wrapper = render(newState);
-    return {
-      contains: (arg) => expect(wrapper.containsMatchingElement(arg)).toBeTruthy()
-    }
+class ReduxTdd {
+  constructor(s, render) {
+    this.state = { ...s };
+    this.render = render;
+    this.wrapper = render(this.state);
+    this.currentAction = null;
   }
 
-  function reducer(reducer, action) {
-    const newState = reducer(state, action)
-    return {
-      toMatchObject: obj => {
-        expect(newState).toMatchObject(obj)
-        return {
-          view: () => view(newState)
-        }
-      }
-    }
+  view() {
+    this.wrapper = this.render(this.state);
+    return this;
   }
 
-  function action(mockActionFn) {
+  reducer(reducer) {
+    const newState = reducer(this.state, this.currentAction)
+    this.state = newState;
+    return this;
+  }
+
+  action(mockActionFn) {
     expect(mockActionFn).toHaveBeenCalled();
-    const resultAction = mockActionFn();
-    return {
-      toMatchObject: obj => {
-        expect(resultAction).toMatchObject(obj)
-        return {
-          reducer: r => reducer(r, resultAction)
-        }
-      }
-    }
+    this.currentAction = mockActionFn();
+    return this;
   }
 
-  function simulate(fn) {
-    const result = fn(wrapper)
-    return {
-      action
-    }
+  simulate(fn) {
+    const result = fn(this.wrapper)
+    return this;
   }
 
-  return {
-    simulate
+  toMatchAction(obj) {
+    expect(this.currentAction).toMatchObject(obj)
+    return this;
+  }
+
+  toMatchState(obj) {
+    expect(this.state).toMatchObject(obj)
+    return this;
+  }
+
+  contains(arg) {
+    expect(this.wrapper.containsMatchingElement(arg)).toBeTruthy();
+    return this;
+  }
+
+  debug() {
+    console.log(this)
   }
 }
 
@@ -64,21 +69,48 @@ function incrementAction() {
   }
 }
 
-function reducer(state, action) {
+function resetAction() {
   return {
-    count: 1
+    type: 'RESET'
   }
 }
 
-const incrementActionMock = jest.fn(payload => incrementAction(payload))
+function reducer(state = { count: 0 }, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { count: state.count + 1 }
+    case 'RESET':
+      return { count: 0 }
+    default:
+      return state
+  }
+}
+
 
 describe('<Counter />', () => {
-  it('should redux flow', () => {
-    reduxTdd({ count: 0 }, state => shallow(<Counter onClick={incrementActionMock} count={state.count} />))
+  it('should test increment', () => {
+    const incrementActionMock = jest.fn(payload => incrementAction(payload))
+    const resetActionMock = jest.fn(payload => resetAction(payload))
+
+    new ReduxTdd({ count: 0 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
       .simulate(wrapper => wrapper.find('button').simulate('click'))
-      .action(incrementActionMock).toMatchObject({ type: 'INCREMENT' })
-      .reducer(reducer).toMatchObject({ count: 1 })
+      .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
+      .reducer(reducer).toMatchState({ count: 1 })
       .view().contains(1)
-      // .view().toMatch(<span>1</span>);
+      .reducer(reducer).toMatchState({ count: 2 })
+      .view().contains(2)
+  })
+  it('should test reset', () => {
+    const incrementActionMock = jest.fn(payload => incrementAction(payload))
+    const resetActionMock = jest.fn(payload => resetAction(payload))
+
+    new ReduxTdd({ count: 9 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
+      .simulate(wrapper => wrapper.find('button').simulate('click'))
+      .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
+      .reducer(reducer).toMatchState({ count: 10 })
+      .view().contains(10)
+      .simulate(wrapper => wrapper.find('button').simulate('click'))
+      .action(resetActionMock).toMatchAction({ type: 'RESET' })
+      .reducer(reducer).toMatchState({ count: 0 })
   })
 })
