@@ -1,5 +1,7 @@
 ## Redux TDD
 
+![](http://i.imgur.com/YYsyxTE.png)
+
 Redux allows us to test each individual part of the unidirectional flow independently without having to worry much about doing integration tests. As visualized below, you can test the action, the reducer and the view, individually:
 
 ```js
