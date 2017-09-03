@@ -42,7 +42,7 @@ describe('<Counter />', () => {
     const incrementActionMock = jest.fn(payload => incrementAction(payload))
     const resetActionMock = jest.fn(payload => resetAction(payload))
 
-    new ReduxTdd({ count: 0 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
+    ReduxTdd({ count: 0 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
       .simulate(wrapper => wrapper.find('button').simulate('click'))
       .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
       .reducer(reducer).toMatchState({ count: 1 })
@@ -54,7 +54,7 @@ describe('<Counter />', () => {
     const incrementActionMock = jest.fn(payload => incrementAction(payload))
     const resetActionMock = jest.fn(payload => resetAction(payload))
 
-    new ReduxTdd({ count: 9 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
+    ReduxTdd({ count: 9 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
       .simulate(wrapper => wrapper.find('button').simulate('click'))
       .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
       .reducer(reducer).toMatchState({ count: 10 })

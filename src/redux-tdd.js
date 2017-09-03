@@ -50,4 +50,6 @@ class ReduxTdd {
   }
 }
 
+var _old = ReduxTdd;
+ReduxTdd = function(...args) { return new _old(...args) };
 export default ReduxTdd;

@@ -2,6 +2,26 @@
 
 ![](http://i.imgur.com/YYsyxTE.png)
 
+### Install
+
+`npm install --save redux-tdd`
+
+```js
+import ReduxTdd from 'redux-tdd';
+
+ReduxTdd({ count: 0 }, state =>
+  <Counter
+    onClick={incrementAction}
+    counter={state.count} />
+)
+.simulate(wrapper => wrapper.find(button).simulate('click'))
+.action(incrementAction).toMatchAction({ type: 'INCREMENT' })
+.reducer(reducer).toMatchState({ count: 1 })
+.view().contains(<span>1</span>);
+```
+
+### About
+
 Redux allows us to test each individual part of the unidirectional flow independently without having to worry much about doing integration tests. As visualized below, you can test the action, the reducer and the view, individually:
 
 ```js
@@ -52,7 +72,7 @@ expect(wrapper).toMatch(<span>1</span>);
 Here we propose a dot-chaining syntax API that allows you to plug each of these "unit tests" together to make it easier to do TDD:
 
 ```js
-reduxTdd({ count: 0 }, state => <Counter onClick={incrementAction} counter={state.count} />)
+ReduxTdd({ count: 0 }, state => <Counter onClick={incrementAction} counter={state.count} />)
   .simulate(wrapper => wrapper.find(button).simulate('click'))
   .action(incrementAction).toReturn({ type: 'INCREMENT' }) // checks that `incrementAction` is called and returns this object
   .reducer(reducer).toEqual({ count: 1 }) // checks that, given the current state of the flow, and the earlier action `reducer({ type: 'INCREMENT' })` returns this object
@@ -66,7 +86,7 @@ The above example is exactly the same as the first example, but with a much slim
 Here's a more complex example:
 
 ```js
-reduxTdd({ count: 9 }, state => <ResetCounter at={10} onClick={incrementAction} counter={state.count} />)
+ReduxTdd({ count: 9 }, state => <ResetCounter at={10} onClick={incrementAction} counter={state.count} />)
   .simulate(wrapper => wrapper.find(button).simulate('click'))
   .action(incrementAction)
   .reducer(reducer).toEqual({ count: 10 })
@@ -82,7 +102,7 @@ reduxTdd({ count: 9 }, state => <ResetCounter at={10} onClick={incrementAction} 
 There maybe cases where a dispatched action does not trigger reducer or state changes. It may be "handled" by an epic which would then dispatch other actions accordingly:
 
 ```js
-reduxTdd({ count: 9 }, state => <Counter onClick={incrementAsyncAction} counter={state.count} />)
+ReduxTdd({ count: 9 }, state => <Counter onClick={incrementAsyncAction} counter={state.count} />)
   .simulate(wrapper => wrapper.find(button).simulate('click'))
   .action(incrementAsyncAction).toReturn({ type: ‘INCREMENT_ASYNC’ })
   .epic(handleIncrementAsyncEpic, { getJSON: () => Observable.of({ type: 'INCREMENT_SUCCESS' }) })
@@ -99,7 +119,7 @@ reduxTdd({ count: 9 }, state => <Counter onClick={incrementAsyncAction} counter=
 Or with other types of middlewares such as redux-thunk which "dispatches" multiple actions asynchronously:
 
 ```js
-reduxTdd({ count: 9 }, state => <Counter onClick={incrementAsyncAction} counter={state.count} />)
+ReduxTdd({ count: 9 }, state => <Counter onClick={incrementAsyncAction} counter={state.count} />)
   .simulate(wrapper => wrapper.find(button).simulate('click'))
   // incrementAsyncThunk() dispatches 'INCREMENT_ASYNC' and then we force (in a promise) 'INCREMENT_SUCCESS'
   .thunk(incrementAsyncThunk, () => Promise.resolve('INCREMENT_SUCCESS'))
