@@ -22,7 +22,8 @@ class ReduxTdd {
   }
 
   view() {
-    this.wrapper = this.render(this.state);
+    // this.wrapper = this.render(this.state);
+    this.wrapper = this.wrapper.setProps(this.state)
     return this;
   }
 
@@ -58,8 +59,9 @@ class ReduxTdd {
     return this;
   }
 
-  debug() {
-    console.log(this)
+  debug(cb) {
+    cb(this);
+    return this;
   }
 }
 
@@ -96,11 +98,11 @@ describe('<Counter />', () => {
       .simulate(wrapper => wrapper.find('button').simulate('click'))
       .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
       .reducer(reducer).toMatchState({ count: 1 })
-      .view().contains(1)
+      .view().contains(<div>{1}</div>)
       .reducer(reducer).toMatchState({ count: 2 })
-      .view().contains(2)
+      .view().contains(<div>{2}</div>)
   })
-  it('should test reset', () => {
+  it('should test reset haha', () => {
     const incrementActionMock = jest.fn(payload => incrementAction(payload))
     const resetActionMock = jest.fn(payload => resetAction(payload))
 
@@ -108,7 +110,7 @@ describe('<Counter />', () => {
       .simulate(wrapper => wrapper.find('button').simulate('click'))
       .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
       .reducer(reducer).toMatchState({ count: 10 })
-      .view().contains(10)
+      .view().contains(<div>{10}</div>)
       .simulate(wrapper => wrapper.find('button').simulate('click'))
       .action(resetActionMock).toMatchAction({ type: 'RESET' })
       .reducer(reducer).toMatchState({ count: 0 })
