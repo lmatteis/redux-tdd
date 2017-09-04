@@ -64,3 +64,13 @@ describe('<Counter />', () => {
       .reducer(reducer).toMatchState({ count: 0 })
   })
 })
+
+/*
+const myTest = flow(
+  action(incrementActionMock)({ type: 'INCREMENT' }), // { state, wrapper, action }
+  reducer(reducer)({ count: 1 }), // { newState, wrapper, action }
+  view(<div>{1}</div>), // { newState, newWrapper, action }
+)({ count: 0 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
+
+run(myTest) // takes all the data from the test above, and actually runs expect() against it
+*/

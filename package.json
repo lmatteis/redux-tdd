@@ -1,6 +1,6 @@
 {
   "name": "redux-tdd",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Dot-chaining syntax for doing TDD with redux by composing unit tests as if they were integration tests",
   "main": "dist/redux-tdd.js",
   "files": [
