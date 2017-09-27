@@ -19,7 +19,10 @@
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
     "react-test-renderer": "^15.6.1",
-    "regenerator-runtime": "^0.11.0"
+    "redux": "^3.7.2",
+    "redux-observable": "^0.16.0",
+    "regenerator-runtime": "^0.11.0",
+    "rxjs": "^5.4.3"
   },
   "scripts": {
     "test": "jest",

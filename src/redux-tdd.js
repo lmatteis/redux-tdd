@@ -1,3 +1,5 @@
+import { ActionsObservable } from 'redux-observable';
+
 class ReduxTdd {
   constructor(s, render) {
     this.state = { ...s };
@@ -25,7 +27,7 @@ class ReduxTdd {
   }
 
   action(mockActionFn) {
-    if (mockActionFn.fn) {
+    if (mockActionFn.mock) {
       expect(mockActionFn).toHaveBeenCalled();
       const firstCall = mockActionFn.mock.calls[0];
       this.currentAction = mockActionFn(...firstCall);
@@ -70,6 +72,18 @@ class ReduxTdd {
 
   debug(cb) {
     cb(this);
+    return this;
+  }
+
+  epic(epicFn, dependencies) {
+    const action$ = ActionsObservable.of(this.currentAction);
+    const store = null;
+
+    epicFn(action$, store, dependencies)
+      .toArray() // buffers all emitted actions until your Epic naturally completes()
+      .subscribe(actions => {
+      });
+
     return this;
   }
 }
