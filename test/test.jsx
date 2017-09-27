@@ -14,6 +14,16 @@ function Counter({ onIncrement, onReset, count }) {
   );
 }
 
+function Modal({ show }) {
+  return (
+    <div>
+      { show &&
+        <div className="showModal"></div>
+      }
+    </div>
+  );
+}
+
 function incrementAction() {
   return {
     type: 'INCREMENT'
@@ -37,6 +47,17 @@ function reducer(state = { count: 0 }, action) {
   }
 }
 
+function multipleComponentsReducer(state = { count: 0, show: false }, action) {
+  switch (action.type) {
+    case 'INCREMENT':
+      return { ...state, count: state.count + 1, show: (state.count + 1) % 2 !== 0 }
+    case 'RESET':
+      return { ...state, count: 0 }
+    default:
+      return state
+  }
+}
+
 describe('<Counter />', () => {
   it('should test increment', () => {
     const incrementActionMock = jest.fn(payload => incrementAction(payload))
@@ -50,7 +71,7 @@ describe('<Counter />', () => {
       .reducer(reducer).toMatchState({ count: 2 })
       .view().contains(<div>{2}</div>)
   })
-  it('should test reset haha', () => {
+  it('should test reset', () => {
     const incrementActionMock = jest.fn(payload => incrementAction(payload))
     const resetActionMock = jest.fn(payload => resetAction(payload))
 
@@ -65,12 +86,39 @@ describe('<Counter />', () => {
   })
 })
 
-/*
-const myTest = flow(
-  action(incrementActionMock)({ type: 'INCREMENT' }), // { state, wrapper, action }
-  reducer(reducer)({ count: 1 }), // { newState, wrapper, action }
-  view(<div>{1}</div>), // { newState, newWrapper, action }
-)({ count: 0 }, state => shallow(<Counter onIncrement={incrementActionMock} onReset={resetActionMock} count={state.count} />))
-
-run(myTest) // takes all the data from the test above, and actually runs expect() against it
-*/
+describe('<Counter /> and <Modal />', () => {
+  it('should test interaction between multiple components', () => {
+    const incrementActionMock = jest.fn(payload => incrementAction(payload))
+    ReduxTdd({ count: 0, show: false }, state => ([
+      shallow(
+        <Counter
+          onIncrement={incrementActionMock}
+          counter={state.count} />
+      ),
+      shallow(
+        <Modal
+          show={state.show} />
+      )
+    ]))
+    .simulate(([ counterWrapper, modalWrapper ]) =>
+      counterWrapper.instance().props.onIncrement() // simulate a click
+    )
+    .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
+    // should show modal when state.count is odd
+    .reducer(multipleComponentsReducer).toMatchState({ count: 1, show: true })
+    .view().contains(([ counter, modal ]) =>
+      counter.contains(<div>{1}</div>) &&
+      modal.contains(<div className="showModal" />)
+    )
+    .simulate(([ counterWrapper, modalWrapper ]) =>
+      counterWrapper.instance().props.onIncrement() // simulate a click
+    )
+    .action(incrementActionMock).toMatchAction({ type: 'INCREMENT' })
+    // should hide modal when state.count is even
+    .reducer(multipleComponentsReducer).toMatchState({ count: 2, show: false })
+    .view().contains(([ counter, modal ]) =>
+      counter.contains(<div>{2}</div>) &&
+      !modal.contains(<div className="showModal" />)
+    )
+  })
+})

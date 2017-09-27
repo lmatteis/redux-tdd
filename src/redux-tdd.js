@@ -2,45 +2,69 @@ class ReduxTdd {
   constructor(s, render) {
     this.state = { ...s };
     this.render = render;
-    this.wrapper = render(this.state);
     this.currentAction = null;
+
+    this.wrappers = render(this.state);
   }
 
   view() {
-    // this.wrapper = this.render(this.state);
-    this.wrapper = this.wrapper.setProps(this.state)
+    if (Array.isArray(this.wrappers)) {
+      this.wrappers.forEach(wrapper =>
+        wrapper.setProps(this.state)
+      );
+    } else {
+      this.wrappers.setProps(this.state);
+    }
     return this;
   }
 
   reducer(reducer) {
-    const newState = reducer(this.state, this.currentAction)
+    const newState = reducer(this.state, this.currentAction);
     this.state = newState;
     return this;
   }
 
   action(mockActionFn) {
-    expect(mockActionFn).toHaveBeenCalled();
-    this.currentAction = mockActionFn();
+    if (mockActionFn.fn) {
+      expect(mockActionFn).toHaveBeenCalled();
+      const firstCall = mockActionFn.mock.calls[0];
+      this.currentAction = mockActionFn(...firstCall);
+    } else {
+      this.currentAction = mockActionFn();
+    }
     return this;
   }
 
   simulate(fn) {
-    const result = fn(this.wrapper)
+    const result = fn(this.wrappers);
     return this;
   }
 
   toMatchAction(obj) {
-    expect(this.currentAction).toMatchObject(obj)
+    expect(this.currentAction).toMatchObject(obj);
     return this;
   }
 
   toMatchState(obj) {
-    expect(this.state).toMatchObject(obj)
+    expect(this.state).toMatchObject(obj);
     return this;
   }
 
-  contains(arg) {
-    expect(this.wrapper.containsMatchingElement(arg)).toBeTruthy();
+  contains(arg, truthy = true) {
+    if (Array.isArray(this.wrappers)) {
+      // arg is a function
+      if (truthy) {
+        expect(arg(this.wrappers)).toBeTruthy();
+      } else {
+        expect(arg(this.wrappers)).toBeFalsy();
+      }
+    } else {
+      if (truthy) {
+        expect(this.wrappers.containsMatchingElement(arg)).toBeTruthy();
+      } else {
+        expect(this.wrappers.containsMatchingElement(arg)).toBeFalsy();
+      }
+    }
     return this;
   }
 
@@ -51,5 +75,5 @@ class ReduxTdd {
 }
 
 var _old = ReduxTdd;
-ReduxTdd = function(...args) { return new _old(...args) };
+ReduxTdd = function (...args) { return new _old(...args); };
 export default ReduxTdd;
