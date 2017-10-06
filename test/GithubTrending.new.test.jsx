@@ -39,6 +39,7 @@ function handleRefreshEpic(action$, store, { getJSON }) {
     .mergeMap(() =>
       getJSON('http://foo.bar')
         .map(response => refreshDoneAction(response))
+        .catch(err => Observable.of({ type: 'ERROR' }))
     );
 }
 
@@ -50,38 +51,31 @@ describe('<GithubTrending />', () => {
         loading={state.loading}
         onRefresh={refreshAction} />
     ))
-    .view(wrapper => {
-      expect(wrapper.containsMatchingElement(<div className="loading" />)).toBeFalsy();
-      expect(wrapper.containsMatchingElement(<div className="projects">No projects</div>)).toBeTruthy();
-      expect(wrapper.containsMatchingElement(<button className="refresh">refresh</button>)).toBeTruthy();
-    })
+    .contains(<div className="loading" />, false)
+    .contains(<div className="projects">No projects</div>)
+    .contains(<button className="refresh">refresh</button>)
 
     .action(wrapper =>
       wrapper.instance().props.onRefresh()
     )
-    .view(wrapper => {
-      expect(props(wrapper)).toMatchObject({ loading: true })
-      expect(contains(<div className="loading" />, wrapper)).toBeTruthy();
-    })
+    .contains(<div className="loading" />)
+    .toMatchProps({ loading: true })
 
     .epic(handleRefreshEpic, { getJSON: () =>
       Observable.of([
         { name: 'redux-tdd' }, { name: 'redux-cycles' }
       ])
     })
-    .view(wrapper =>
-      expect(props(wrapper)).toMatchObject({
-        loading: false,
-        projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
-      })
-    )
-    .view(wrapper => {
-      expect(contains(<div className="loading" />, wrapper)).toBeFalsy(); // shouldn't show loading
-      expect(contains(<div className="projects">
-        <div>redux-tdd</div>
-        <div>redux-cycles</div>
-      </div>, wrapper)).toBeTruthy();
 
+    .toMatchProps({
+      loading: false,
+      projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
     })
+
+    .contains(<div className="loading" />, false) // shouldn't show loading
+    .contains(<div className="projects">
+      <div>redux-tdd</div>
+      <div>redux-cycles</div>
+    </div>)
   })
 })

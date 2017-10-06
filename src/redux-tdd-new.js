@@ -56,6 +56,29 @@ class ReduxTdd {
 
     return this;
   }
+
+  contains(arg, truthy = true) {
+    if (Array.isArray(this.wrappers)) {
+      // arg is a function
+      if (truthy) {
+        expect(arg(this.wrappers)).toBeTruthy();
+      } else {
+        expect(arg(this.wrappers)).toBeFalsy();
+      }
+    } else {
+      if (truthy) {
+        expect(this.wrappers.containsMatchingElement(arg)).toBeTruthy();
+      } else {
+        expect(this.wrappers.containsMatchingElement(arg)).toBeFalsy();
+      }
+    }
+    return this;
+  }
+
+  toMatchProps(obj) {
+    expect(this.wrappers.instance().props).toMatchObject(obj);
+    return this;
+  }
 }
 
 export function props(wrapper) {
