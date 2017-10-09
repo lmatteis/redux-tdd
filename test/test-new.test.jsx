@@ -1,12 +1,12 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import ReduxTdd, { props } from '../src/redux-tdd-new';
+import ReduxTdd, { props, toMatchProps, contains } from '../src/redux-tdd-new';
 
-function Counter({ onIncrement, onReset, count }) {
+function Counter({ onIncrement, onReset, counter }) {
   return (
     <div>
-      <div>{count}</div>
-      { count === 10
+      <div>{counter}</div>
+      { counter === 10
         ? <button onClick={onReset}>reset</button>
         : <button onClick={onIncrement}>increment</button>
       }
@@ -64,79 +64,83 @@ function mapStateToProps(state) {
   }
 }
 
-describe('<Counter />', () => {
-  it('should test increment', () => {
-    ReduxTdd({ count: 0 }, reducer, props => shallow(
-      <Counter
-        onIncrement={incrementAction}
-        onReset={resetAction}
-        counter={props.count} />
-    ), mapStateToProps)
-    .action(wrapper =>
-      wrapper.instance().props.onIncrement()
-    )
-    .view(wrapper =>
-      expect(wrapper.instance().props.counter).toBe(1)
-    )
-    .action(wrapper =>
-      wrapper.instance().props.onIncrement()
-    )
-    .view(wrapper =>
-      expect(wrapper.instance().props).toMatchObject({ counter: 2 })
-    )
-  })
-  it('should test reset', () => {
-    ReduxTdd({ count: 9 }, reducer, state => shallow(
-      <Counter
-        onIncrement={incrementAction}
-        onReset={resetAction}
-        count={state.count} />
-    ))
-    .action(wrapper =>
-      wrapper.instance().props.onIncrement()
-    )
-    .view(wrapper => {
-      expect(props(wrapper)).toMatchObject({ count: 10 })
-      expect(wrapper.contains(<div>{10}</div>)).toBeTruthy()
-    })
-
-    .action(wrapper =>
-      wrapper.instance().props.onReset()
-    )
-    .view(wrapper => {
-      expect(props(wrapper)).toMatchObject({ count: 0 })
-      expect(wrapper.contains(<div>{0}</div>)).toBeTruthy()
-    })
-  })
-})
+// describe('<Counter />', () => {
+//   it('should test increment', () => {
+//     ReduxTdd({ count: 0 }, reducer, props => shallow(
+//       <Counter
+//         onIncrement={incrementAction}
+//         onReset={resetAction}
+//         counter={props.count} />
+//     ), mapStateToProps)
+//     .action(wrapper =>
+//       wrapper.instance().props.onIncrement()
+//     )
+//     .view(wrapper =>
+//       expect(wrapper.instance().props.counter).toBe(1)
+//     )
+//     .action(wrapper =>
+//       wrapper.instance().props.onIncrement()
+//     )
+//     .view(wrapper =>
+//       expect(wrapper.instance().props).toMatchObject({ counter: 2 })
+//     )
+//   })
+//   it('should test reset', () => {
+//     ReduxTdd({ count: 9 }, reducer, state => shallow(
+//       <Counter
+//         onIncrement={incrementAction}
+//         onReset={resetAction}
+//         count={state.count} />
+//     ))
+//     .action(wrapper =>
+//       wrapper.instance().props.onIncrement()
+//     )
+//     .view(wrapper => {
+//       expect(props(wrapper)).toMatchObject({ count: 10 })
+//       expect(wrapper.contains(<div>{10}</div>)).toBeTruthy()
+//     })
+//
+//     .action(wrapper =>
+//       wrapper.instance().props.onReset()
+//     )
+//     .view(wrapper => {
+//       expect(props(wrapper)).toMatchObject({ count: 0 })
+//       expect(wrapper.contains(<div>{0}</div>)).toBeTruthy()
+//     })
+//   })
+// })
 
 describe('<Counter /> and <Modal />', () => {
   it('should test interaction between multiple components', () => {
     ReduxTdd({ count: 0, show: false }, multipleComponentsReducer, state => ([
-      shallow(
-        <Counter
-          onIncrement={incrementAction}
-          counter={state.count} />
-      ),
-      shallow(
-        <Modal
-          show={state.show} />
-      )
+      <Counter
+        onIncrement={incrementAction}
+        counter={state.count} />
+      ,
+      <Modal
+        show={state.show} />
     ]))
+
     .action(([ counterWrapper, modalWrapper ]) =>
       props(counterWrapper).onIncrement() // simulate a click
     )
     // should show modal when state.count is odd
-    .view(([ counter, modal ]) =>
-      expect(counter.contains(<div>{1}</div>) &&
-      modal.contains(<div className="showModal" />)).toBeTruthy()
-    )
-    .action(([ counterWrapper, modalWrapper ]) =>
-      counterWrapper.instance().props.onIncrement() // simulate a click
-    )
-    .view(([ counter, modal ]) =>
-      expect(counter.contains(<div>{2}</div>) &&
-      !modal.contains(<div className="showModal" />)).toBeTruthy()
-    )
+    .view(() => ([
+      [
+        toMatchProps({ counter: 1 }),
+        contains(<div>{1}</div>)
+      ],
+      [
+        toMatchProps({ show: true }),
+        contains(<div className="showModal" />)
+      ]
+    ]))
+    // .action(([ counterWrapper, modalWrapper ]) =>
+    //   counterWrapper.instance().props.onIncrement() // simulate a click
+    // )
+    // .view(([ counter, modal ]) =>
+    //   expect(counter.contains(<div>{2}</div>) &&
+    //   !modal.contains(<div className="showModal" />)).toBeTruthy()
+    // )
   })
 })

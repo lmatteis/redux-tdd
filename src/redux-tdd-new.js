@@ -1,19 +1,26 @@
 import { ActionsObservable } from 'redux-observable';
+import { shallow } from 'enzyme';
 
 class ReduxTdd {
-  constructor(s, reducer, render, mapStateToProps) {
+  constructor(s, reducer, render) {
     this.state = { ...s };
     this.currentAction = null;
 
     const identity = state => state;
 
     this.reducer = reducer;
-    this.mapStateToProps = mapStateToProps || identity;
-    this.wrappers = render(this.state);
+    this.render = render;
+    this.components = render(this.state);
+    this.wrappers = this.components.map(c => shallow(c))
   }
 
   view(fn) {
-    fn(this.wrappers);
+    const arr = fn(this.wrappers);
+    arr.forEach((flow, idx) =>
+      flow.forEach(func =>
+        func(this.wrappers[idx])
+      )
+    )
     return this;
   }
 
@@ -29,11 +36,11 @@ class ReduxTdd {
 
     // second: update view
     if (Array.isArray(this.wrappers)) {
-      this.wrappers.forEach(wrapper =>
-        wrapper.setProps(this.mapStateToProps(this.state))
+      this.wrappers.forEach((wrapper, idx) =>
+        wrapper.setProps(this.render(this.state)[idx].props)
       );
     } else {
-      this.wrappers.setProps(this.mapStateToProps(this.state));
+      this.wrappers.setProps(this.render(this.state));
     }
 
     return this;
@@ -85,10 +92,21 @@ export function props(wrapper) {
   return wrapper.instance().props;
 }
 
-export function contains(node, wrapper) {
-  return wrapper.containsMatchingElement(node);
+export function contains(node) {
+  return function (wrapper) {
+    if (!wrapper.containsMatchingElement(node)) {
+      console.log(wrapper.debug())
+      console.log(shallow(node).debug())
+    }
+    expect(wrapper.containsMatchingElement(node)).toBeTruthy();
+  }
 }
 
+export function toMatchProps(obj) {
+  return function (wrapper) {
+    expect(wrapper.instance().props).toMatchObject(obj);
+  }
+}
 
 var _old = ReduxTdd;
 ReduxTdd = function (...args) { return new _old(...args); };
