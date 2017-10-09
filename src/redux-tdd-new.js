@@ -11,7 +11,9 @@ class ReduxTdd {
     this.reducer = reducer;
     this.render = render;
     this.components = render(this.state);
+    // console.log(this.components[0].type.name, '')
     this.wrappers = this.components.map(c => shallow(c))
+    // console.log(this.wrappers[0])
   }
 
   view(fn) {
@@ -24,8 +26,12 @@ class ReduxTdd {
     return this;
   }
 
-  action(fn) {
-    const action = fn(this.wrappers);
+  action(component, fn) {
+    // find component
+    const componentIndex = this.components.findIndex(c => c.type === component);
+    const wrapper = this.wrappers[componentIndex]
+
+    const action = fn(props(wrapper));
     this.currentAction = action;
 
     // check if the action object is handled in reducer

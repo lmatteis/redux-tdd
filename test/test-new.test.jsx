@@ -121,20 +121,34 @@ describe('<Counter /> and <Modal />', () => {
         show={state.show} />
     ]))
 
-    .action(([ counterWrapper, modalWrapper ]) =>
-      props(counterWrapper).onIncrement() // simulate a click
-    )
-    // should show modal when state.count is odd
-    .view(() => ([
-      [
-        toMatchProps({ counter: 1 }),
-        contains(<div>{1}</div>)
-      ],
-      [
-        toMatchProps({ show: true }),
-        contains(<div className="showModal" />)
-      ]
-    ]))
+    .test(Counter)
+      .action((props) => props.onIncrement())
+      .toMatchProps({ counter: 1 })
+      .contains(<div>{1}</div>)
+      
+    .test(Modal)
+      .toMatchProps({ show: true })
+      .contains(<div className="showModal" />)
+    // .view(Modal)
+    //   .toMatchProps({ counter: 1 })
+    //   .contains(<div>{1}</div>)
+
+    // .view(0, )
+    //
+    // .action(([ counterWrapper, modalWrapper ]) =>
+    //   props(counterWrapper).onIncrement() // simulate a click
+    // )
+    // // should show modal when state.count is odd
+    // .view(() => ([
+    //   [
+    //     toMatchProps({ counter: 1 }),
+    //     contains(<div>{1}</div>)
+    //   ],
+    //   [
+    //     toMatchProps({ show: true }),
+    //     contains(<div className="showModal" />)
+    //   ]
+    // ]))
     // .action(([ counterWrapper, modalWrapper ]) =>
     //   counterWrapper.instance().props.onIncrement() // simulate a click
     // )
