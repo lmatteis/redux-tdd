@@ -5,7 +5,7 @@ class ReduxTdd {
   constructor(s, reducer, render) {
     this.state = { ...s };
     this.currentAction = null;
-    this.currentIdx = null;
+    this.currentIdx = 0;
 
     const identity = state => state;
 

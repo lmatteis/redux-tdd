@@ -64,51 +64,36 @@ function mapStateToProps(state) {
   }
 }
 
-// describe('<Counter />', () => {
-//   it('should test increment', () => {
-//     ReduxTdd({ count: 0 }, reducer, props => shallow(
-//       <Counter
-//         onIncrement={incrementAction}
-//         onReset={resetAction}
-//         counter={props.count} />
-//     ), mapStateToProps)
-//     .action(wrapper =>
-//       wrapper.instance().props.onIncrement()
-//     )
-//     .view(wrapper =>
-//       expect(wrapper.instance().props.counter).toBe(1)
-//     )
-//     .action(wrapper =>
-//       wrapper.instance().props.onIncrement()
-//     )
-//     .view(wrapper =>
-//       expect(wrapper.instance().props).toMatchObject({ counter: 2 })
-//     )
-//   })
-//   it('should test reset', () => {
-//     ReduxTdd({ count: 9 }, reducer, state => shallow(
-//       <Counter
-//         onIncrement={incrementAction}
-//         onReset={resetAction}
-//         count={state.count} />
-//     ))
-//     .action(wrapper =>
-//       wrapper.instance().props.onIncrement()
-//     )
-//     .view(wrapper => {
-//       expect(props(wrapper)).toMatchObject({ count: 10 })
-//       expect(wrapper.contains(<div>{10}</div>)).toBeTruthy()
-//     })
-//
-//     .action(wrapper =>
-//       wrapper.instance().props.onReset()
-//     )
-//     .view(wrapper => {
-//       expect(props(wrapper)).toMatchObject({ count: 0 })
-//       expect(wrapper.contains(<div>{0}</div>)).toBeTruthy()
-//     })
-//   })
-// })
+describe('<Counter />', () => {
+  it('should test increment', () => {
+    ReduxTdd({ count: 0 }, reducer, props => ([
+      <Counter
+        onIncrement={incrementAction}
+        onReset={resetAction}
+        counter={props.count} />
+    ]))
+    .action(props => props.onIncrement())
+    .toMatchProps({ counter: 1 })
+
+    .action(props => props.onIncrement())
+    .toMatchProps({ counter: 2 })
+  })
+  it('should test reset', () => {
+    ReduxTdd({ count: 9 }, reducer, state => ([
+      <Counter
+        onIncrement={incrementAction}
+        onReset={resetAction}
+        counter={state.count} />
+    ]))
+    .action(props => props.onIncrement())
+    .toMatchProps({ counter: 10 })
+    .contains(<div>{10}</div>)
+
+    .action(props => props.onReset())
+    .toMatchProps({ counter: 0 })
+    .contains(<div>{0}</div>)
+  })
+})
 
 describe('<Counter /> and <Modal />', () => {
   it('should test interaction between multiple components', () => {
@@ -121,40 +106,22 @@ describe('<Counter /> and <Modal />', () => {
         show={state.show} />
     ]))
 
-    .test(0)
-      .action((props) => props.onIncrement())
-      .toMatchProps({ counter: 1 })
-      .contains(<div>{1}</div>)
+    // by default it works on the first component (Counter)
+    .action((props) => props.onIncrement())
+    .toMatchProps({ counter: 1 })
+    .contains(<div>{1}</div>)
 
     .test(1)
       .toMatchProps({ show: true })
       .contains(<div className="showModal" />)
-    // .view(Modal)
-    //   .toMatchProps({ counter: 1 })
-    //   .contains(<div>{1}</div>)
 
-    // .view(0, )
-    //
-    // .action(([ counterWrapper, modalWrapper ]) =>
-    //   props(counterWrapper).onIncrement() // simulate a click
-    // )
-    // // should show modal when state.count is odd
-    // .view(() => ([
-    //   [
-    //     toMatchProps({ counter: 1 }),
-    //     contains(<div>{1}</div>)
-    //   ],
-    //   [
-    //     toMatchProps({ show: true }),
-    //     contains(<div className="showModal" />)
-    //   ]
-    // ]))
-    // .action(([ counterWrapper, modalWrapper ]) =>
-    //   counterWrapper.instance().props.onIncrement() // simulate a click
-    // )
-    // .view(([ counter, modal ]) =>
-    //   expect(counter.contains(<div>{2}</div>) &&
-    //   !modal.contains(<div className="showModal" />)).toBeTruthy()
-    // )
+    .test(0)
+      .action((props) => props.onIncrement())
+      .toMatchProps({ counter: 2 })
+      .contains(<div>{2}</div>)
+
+    .test(1)
+      .toMatchProps({ show: false })
+      .contains(<div className="showModal" />, false)
   })
 })
