@@ -121,12 +121,12 @@ describe('<Counter /> and <Modal />', () => {
         show={state.show} />
     ]))
 
-    .test(Counter)
+    .test(0)
       .action((props) => props.onIncrement())
       .toMatchProps({ counter: 1 })
       .contains(<div>{1}</div>)
-      
-    .test(Modal)
+
+    .test(1)
       .toMatchProps({ show: true })
       .contains(<div className="showModal" />)
     // .view(Modal)

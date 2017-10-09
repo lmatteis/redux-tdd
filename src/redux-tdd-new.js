@@ -5,6 +5,7 @@ class ReduxTdd {
   constructor(s, reducer, render) {
     this.state = { ...s };
     this.currentAction = null;
+    this.currentIdx = null;
 
     const identity = state => state;
 
@@ -16,22 +17,13 @@ class ReduxTdd {
     // console.log(this.wrappers[0])
   }
 
-  view(fn) {
-    const arr = fn(this.wrappers);
-    arr.forEach((flow, idx) =>
-      flow.forEach(func =>
-        func(this.wrappers[idx])
-      )
-    )
+  test(idx) {
+    this.currentIdx = idx;
     return this;
   }
 
-  action(component, fn) {
-    // find component
-    const componentIndex = this.components.findIndex(c => c.type === component);
-    const wrapper = this.wrappers[componentIndex]
-
-    const action = fn(props(wrapper));
+  action(fn) {
+    const action = fn(props(this.wrappers[this.currentIdx]));
     this.currentAction = action;
 
     // check if the action object is handled in reducer
@@ -40,13 +32,11 @@ class ReduxTdd {
     const newState = this.reducer(this.state, action);
     this.state = newState;
 
-    // second: update view
+    // second: update views
     if (Array.isArray(this.wrappers)) {
       this.wrappers.forEach((wrapper, idx) =>
         wrapper.setProps(this.render(this.state)[idx].props)
       );
-    } else {
-      this.wrappers.setProps(this.render(this.state));
     }
 
     return this;
@@ -71,25 +61,17 @@ class ReduxTdd {
   }
 
   contains(arg, truthy = true) {
-    if (Array.isArray(this.wrappers)) {
-      // arg is a function
-      if (truthy) {
-        expect(arg(this.wrappers)).toBeTruthy();
-      } else {
-        expect(arg(this.wrappers)).toBeFalsy();
-      }
+    if (truthy) {
+      expect(this.wrappers[this.currentIdx].containsMatchingElement(arg)).toBeTruthy();
     } else {
-      if (truthy) {
-        expect(this.wrappers.containsMatchingElement(arg)).toBeTruthy();
-      } else {
-        expect(this.wrappers.containsMatchingElement(arg)).toBeFalsy();
-      }
+      expect(this.wrappers[this.currentIdx].containsMatchingElement(arg)).toBeFalsy();
     }
+
     return this;
   }
 
   toMatchProps(obj) {
-    expect(this.wrappers.instance().props).toMatchObject(obj);
+    expect(this.wrappers[this.currentIdx].instance().props).toMatchObject(obj);
     return this;
   }
 }
