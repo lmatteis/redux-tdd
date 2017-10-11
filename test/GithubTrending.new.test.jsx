@@ -21,14 +21,19 @@ function refreshAction() {
 function refreshDoneAction(payload) {
   return { type: 'REFRESH_DONE', payload };
 }
+function refreshFailAction(payload) {
+  return { type: 'REFRESH_FAIL', payload, error: true };
+}
 
 const initialState = { projects: [], loading: false };
-function githubReducer(state = initialState, action) {
+function github(state = initialState, action) {
   switch (action.type) {
     case 'REFRESH':
       return { ...state, loading: true };
     case 'REFRESH_DONE':
       return { ...state, loading: false, projects: action.payload };
+    case 'REFRESH_FAIL':
+      return { ...state, loading: false, projects: [] };
     default:
       return state;
   }
@@ -39,27 +44,44 @@ function handleRefreshEpic(action$, store, { getJSON }) {
     .mergeMap(() =>
       getJSON('http://foo.bar')
         .map(response => refreshDoneAction(response))
-        .catch(err => Observable.of({ type: 'ERROR' }))
+        .catch(err => Observable.of(refreshFailAction(err), setErrorAction(err)))
     );
+}
+
+function error(state = { message: null }, action) {
+  switch (action.type) {
+    case 'ERROR':
+      return { ...state, message: action.payload.error }
+    default:
+      return state;
+  }
+}
+
+function setErrorAction(error) {
+  return { type: 'ERROR', payload: error };
+}
+
+function Error({ message }) {
+  return <div className="error">{message}</div>
 }
 
 describe('<GithubTrending />', () => {
   it('should test flow', () => {
-    ReduxTdd({ projects: [], loading: false }, githubReducer, state => shallow(
+    ReduxTdd({ github, error }, state => [
       <GithubTrending
-        projects={state.projects}
-        loading={state.loading}
+        projects={state.github.projects}
+        loading={state.github.loading}
         onRefresh={refreshAction} />
-    ))
+      ,
+      <Error message={state.error.message} />
+    ])
     .contains(<div className="loading" />, false)
     .contains(<div className="projects">No projects</div>)
     .contains(<button className="refresh">refresh</button>)
 
-    .action(wrapper =>
-      wrapper.instance().props.onRefresh()
-    )
-    .contains(<div className="loading" />)
+    .action(props => props.onRefresh())
     .toMatchProps({ loading: true })
+    .contains(<div className="loading" />)
 
     .epic(handleRefreshEpic, { getJSON: () =>
       Observable.of([
@@ -77,5 +99,22 @@ describe('<GithubTrending />', () => {
       <div>redux-tdd</div>
       <div>redux-cycles</div>
     </div>)
+
+    .action(props => props.onRefresh())
+    .epic(handleRefreshEpic, { getJSON: () =>
+      Observable.throw({ error: 'Some error' })
+    })
+
+    .toMatchProps({
+      loading: false,
+      projects: [],
+    })
+    .contains(<div className="projects">No projects</div>)
+
+    .test(1)
+    .toMatchProps({
+      message: 'Some error'
+    })
+    .contains(<div className="error">{'Some error'}</div>)
   })
 })

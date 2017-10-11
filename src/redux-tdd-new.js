@@ -1,15 +1,14 @@
 import { ActionsObservable } from 'redux-observable';
+import { combineReducers } from 'redux'
 import { shallow } from 'enzyme';
 
 class ReduxTdd {
-  constructor(s, reducer, render) {
-    this.state = { ...s };
+  constructor(reducers, render) {
     this.currentAction = null;
     this.currentIdx = 0;
 
-    const identity = state => state;
-
-    this.reducer = reducer;
+    this.reducer = combineReducers(reducers);
+    this.state = this.reducer(undefined, { type: '@@redux/INIT'});
     this.render = render;
     this.components = render(this.state);
     // console.log(this.components[0].type.name, '')
@@ -54,7 +53,9 @@ class ReduxTdd {
     epicFn(action$, store, dependencies)
       .toArray() // buffers all emitted actions until your Epic naturally completes()
       .subscribe(actions => {
-        this.action(() => actions[0])
+        actions.forEach(action =>
+          this.action(() => action)
+        )
       });
 
     return this;
