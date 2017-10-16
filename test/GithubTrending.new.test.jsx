@@ -2,7 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Observable } from 'rxjs';
 
-import ReduxTdd, { props, contains } from '../src/redux-tdd-new';
+import ReduxTdd from '../src/redux-tdd-new';
 
 function GithubTrending({ projects, loading, onRefresh }) {
   return <div>
@@ -65,56 +65,92 @@ function Error({ message }) {
   return <div className="error">{message}</div>
 }
 
+// const test = [
+//   // by default let's work on first component in list
+//   { op: 'contains', value: <div className="projects">No projects</div> },
+//   { op: 'action', value: 'onRefresh' },
+//   { op: 'toMatchProps', value: { loading: true } },
+//   { op: 'contains', value: <div className="loading" /> },
+//
+//   { op: 'epic', value: {
+//     dependency: 'getJSON',
+//     output: Observable.of([
+//       { name: 'redux-tdd' }, { name: 'redux-cycles' }
+//     ])
+//   } },
+//
+//   { op: 'toMatchProps', value: {
+//     loading: false,
+//     projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
+//   } },
+//
+// ]
+// ReduxTdd({ github, error }, [ GithubTrending, Error ], test)
+
+const actions = {
+  clickRefreshBtn: props => props.onRefresh()
+}
+
+const props = {
+  isLoading: { loading: true }
+}
+
+const views = {
+  loading: <div className="loading" />,
+  noProjects: <div className="projects">No projects</div>,
+  refreshBtn: <button className="refresh">refresh</button>,
+}
+
 describe('<GithubTrending />', () => {
-  it('should test flow', () => {
-    ReduxTdd({ github, error }, state => [
-      <GithubTrending
-        projects={state.github.projects}
-        loading={state.github.loading}
-        onRefresh={refreshAction} />
-      ,
-      <Error message={state.error.message} />
+  ReduxTdd({ github, error }, state => [
+    <GithubTrending
+      projects={state.github.projects}
+      loading={state.github.loading}
+      onRefresh={refreshAction} />
+    ,
+    <Error message={state.error.message} />
+  ])
+  .it('should show no loading and no projects')
+  .contains(views.loading, false)
+  .contains(views.noProjects)
+  .contains(views.refreshBtn)
+
+  .it('should click refresh button and show loading')
+  .action(actions.clickRefreshBtn)
+  .toMatchProps(props.isLoading)
+  .contains(views.loading)
+
+  .it('should simulate http success and render response')
+  .epic(handleRefreshEpic, { getJSON: () =>
+    Observable.of([
+      { name: 'redux-tdd' }, { name: 'redux-cycles' }
     ])
-    .contains(<div className="loading" />, false)
-    .contains(<div className="projects">No projects</div>)
-    .contains(<button className="refresh">refresh</button>)
-
-    .action(props => props.onRefresh())
-    .toMatchProps({ loading: true })
-    .contains(<div className="loading" />)
-
-    .epic(handleRefreshEpic, { getJSON: () =>
-      Observable.of([
-        { name: 'redux-tdd' }, { name: 'redux-cycles' }
-      ])
-    })
-
-    .toMatchProps({
-      loading: false,
-      projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
-    })
-
-    .contains(<div className="loading" />, false) // shouldn't show loading
-    .contains(<div className="projects">
-      <div>redux-tdd</div>
-      <div>redux-cycles</div>
-    </div>)
-
-    .action(props => props.onRefresh())
-    .epic(handleRefreshEpic, { getJSON: () =>
-      Observable.throw({ error: 'Some error' })
-    })
-
-    .toMatchProps({
-      loading: false,
-      projects: [],
-    })
-    .contains(<div className="projects">No projects</div>)
-
-    .test(1)
-    .toMatchProps({
-      message: 'Some error'
-    })
-    .contains(<div className="error">{'Some error'}</div>)
   })
+  .toMatchProps({
+    loading: false,
+    projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
+  })
+  .contains(views.loading, false) // shouldn't show loading
+  .contains(<div className="projects">
+    <div>redux-tdd</div>
+    <div>redux-cycles</div>
+  </div>)
+
+  .it('should click refresh and simulate http error response')
+  .action(actions.clickRefreshBtn)
+  .epic(handleRefreshEpic, { getJSON: () =>
+    Observable.throw({ error: 'Some error' })
+  })
+  .toMatchProps({
+    loading: false,
+    projects: [],
+  })
+  .contains(views.noProjects)
+
+  .it('should test that Error component got right error message')
+  .switch(1)
+  .toMatchProps({
+    message: 'Some error'
+  })
+  .contains(<div className="error">{'Some error'}</div>)
 })

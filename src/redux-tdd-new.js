@@ -16,7 +16,12 @@ class ReduxTdd {
     // console.log(this.wrappers[0])
   }
 
-  test(idx) {
+  it(str) {
+    it(str, () => undefined)
+    return this;
+  }
+
+  switch(idx) {
     this.currentIdx = idx;
     return this;
   }
