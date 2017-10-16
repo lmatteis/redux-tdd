@@ -4,8 +4,12 @@ import { Observable } from 'rxjs';
 
 import ReduxTdd from '../src/redux-tdd-new';
 
-function items(state, action) {
-  return {
+function items(state = [], action) {
+  switch (action.type) {
+    case 'REFRESH_DONE':
+      return action.payload;
+    default:
+      return state
   }
 }
 function error(state, action) {
@@ -14,12 +18,14 @@ function error(state, action) {
 function pages(state, action) {
   return {}
 }
-function loading(state, action) {
+function loading(state = false, action) {
   switch (action.type) {
     case 'REFRESH':
       return true
-    default:
+    case 'REFRESH_DONE':
       return false
+    default:
+      return state
   }
 }
 
@@ -43,7 +49,13 @@ function Pages() {
 }
 
 function refreshAction() {
-  return { type: 'REFRESH' }
+  return { type: 'REFRESH' };
+}
+function refreshDoneAction(payload) {
+  return { type: 'REFRESH_DONE', payload };
+}
+function refreshFailAction(payload) {
+  return { type: 'REFRESH_FAIL', payload, error: true };
 }
 function pageClickAction() {
   return {}
@@ -54,12 +66,16 @@ function handleRefreshEpic(action$, store, { getJSON }) {
     .mergeMap(() =>
       getJSON('http://foo.bar')
         .map(response => refreshDoneAction(response))
-        .catch(err => Observable.of(refreshFailAction(err), setErrorAction(err)))
+        .catch(err => Observable.of(refreshFailAction(err)))
     );
 }
 
+function getPages(state) {
+  return state.items.map((item, idx) => idx)
+}
+
 describe('GithubPages', () => {
-  ReduxTdd({ items, error, pages, loading }, state => [
+  ReduxTdd({ items, error, loading }, state => [
     <List
       items={state.items} />,
     <Loading
@@ -69,7 +85,7 @@ describe('GithubPages', () => {
     <Error
       message={state.error} />,
     <Pages
-      pages={state.pages}
+      pages={getPages(state)}
       onPageClick={pageClickAction} />
   ])
   .it('should not show any items')
@@ -89,6 +105,20 @@ describe('GithubPages', () => {
       { name: 'redux-tdd' }, { name: 'redux-cycles' }
     ])
   })
+
+  .it('should show projects')
+  .switch(0)
+  .toMatchProps({ items: [
+    { name: 'redux-tdd' }, { name: 'redux-cycles' }
+  ]})
+
+  .it('should hide loading')
+  .switch(1)
+  .toMatchProps({ loading: false })
+
+  .it('should render correct amount of pages')
+  .switch(4)
+  .toMatchProps({ pages: [0, 1] })
 
 
 })
