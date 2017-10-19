@@ -1,13 +1,19 @@
 {
   "name": "redux-tdd",
-  "version": "0.0.5",
-  "description": "Dot-chaining syntax for doing TDD with redux by composing unit tests as if they were integration tests",
+  "version": "1.0.0",
+  "description": "Dot-chaining syntax for testing the Redux data-flow of React components",
   "main": "dist/redux-tdd.js",
   "files": [
     "dist/redux-tdd.js"
   ],
   "repository": "https://github.com/lmatteis/redux-tdd",
   "license": "MIT",
+  "peerDependencies": {
+    "redux": "3.*",
+    "redux-observable": "^0.16.0",
+    "enzyme": "^2.9.1",
+    "jest": "^20.0.4"
+  },
   "devDependencies": {
     "babel-cli": "^6.26.0",
     "babel-jest": "^20.0.3",

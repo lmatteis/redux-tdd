@@ -2,7 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Observable } from 'rxjs';
 
-import ReduxTdd from '../src/redux-tdd-min';
+import ReduxTdd from '../../src/redux-tdd-v0.4';
 
 function GithubTrending({ projects, loading, onRefresh }) {
   return <div>
@@ -34,31 +34,32 @@ function githubReducer(state = initialState, action) {
   }
 }
 
+const refreshDoneActionMock = jest.fn(payload => refreshDoneAction(payload))
 function handleRefreshEpic(action$, store, { getJSON }) {
   return action$.ofType('REFRESH')
     .mergeMap(() =>
       getJSON('http://foo.bar')
-        .map(response => refreshDoneAction(response))
+        .map(response => refreshDoneActionMock(response))
     );
 }
 
 describe('<GithubTrending />', () => {
   it('should test flow', () => {
-    ReduxTdd({ projects: [], loading: false }, githubReducer, state => shallow(
+    const refreshActionMock = jest.fn(payload => refreshAction(payload))
+    ReduxTdd({ projects: [], loading: false }, state => shallow(
       <GithubTrending
         projects={state.projects}
         loading={state.loading}
-        onRefresh={refreshAction} />
+        onRefresh={refreshActionMock} />
     ))
     .view()
       .contains(<div className="loading" />, false) // shouldn't show loading
       .contains(<div className="projects">No projects</div>)
       .contains(<button className="refresh">refresh</button>)
 
-    .action(wrapper =>
-      wrapper.instance().props.onRefresh()
-    )
-    .toMatchState({ loading: true })
+    .simulate(wrapper => wrapper.find('.refresh').simulate('click'))
+    .action(refreshActionMock).toMatchAction({ type: 'REFRESH' })
+    .reducer(githubReducer).toMatchState({ loading: true })
     .view().contains(<div className="loading" />)
 
     .epic(handleRefreshEpic, { getJSON: () =>
@@ -66,8 +67,11 @@ describe('<GithubTrending />', () => {
         { name: 'redux-tdd' }, { name: 'redux-cycles' }
       ])
     })
-
-    .toMatchState({
+    .action(refreshDoneActionMock).toMatchAction({
+      type: 'REFRESH_DONE',
+      payload: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }],
+    })
+    .reducer(githubReducer).toMatchState({
       loading: false,
       projects: [{ name: 'redux-tdd' }, { name: 'redux-cycles' }]
     })

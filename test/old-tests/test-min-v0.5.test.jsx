@@ -1,6 +1,6 @@
 import React from 'react';
 import { shallow } from 'enzyme';
-import ReduxTdd from '../src/redux-tdd-min';
+import ReduxTdd from '../../src/redux-tdd-v0.5';
 
 function Counter({ onIncrement, onReset, count }) {
   return (

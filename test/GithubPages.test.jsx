@@ -2,7 +2,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 import { Observable } from 'rxjs';
 
-import ReduxTdd from '../src/redux-tdd-new';
+import ReduxTdd from '../src/redux-tdd';
 
 function items(state = [], action) {
   switch (action.type) {
