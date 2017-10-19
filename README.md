@@ -9,11 +9,11 @@ import reduxTdd from 'redux-tdd';
 
 // reduxTdd() takes as arguments an object which will be passed to redux combineReducers()
 // and a function which returns an array of components that map your state to props
-reduxTdd({ counter: counterReducer }, state =>
+reduxTdd({ counter: counterReducer }, state => [
   <Counter
     onClick={incrementAction}
     counter={state.counter.count} />
-)
+])
 .action(props => props.onClick()) // action() takes a function that must return a redux action
 .toMatchProps({ counter: 1 }) // toMatchProps() checks whether the component took the correct props
 .contains(<span>1</span>) // finally contains() checks that the component contains correct value
