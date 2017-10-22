@@ -18,9 +18,13 @@ function recievedItems(payload) {
 function pauseItem(id) {
   return { type: 'PAUSE_ITEM', payload: id }
 }
+function pauseItemSuccess(payload) {
+  return { type: 'PAUSE_ITEM_SUCCESS', payload }
+}
 
 function handleFetchItems(action$, store, { getJSON }) {
   return action$
+    .ofType('FETCH_ITEMS')
     .switchMap(action =>
       getJSON('http://foo')
         .map(response =>
@@ -32,6 +36,17 @@ function handleFetchItems(action$, store, { getJSON }) {
           , {})
         )
         .map(response => recievedItems(response))
+    )
+}
+
+function handlePausItem(action$, store, { getJSON }) {
+  return action$
+    .ofType('PAUSE_ITEM')
+    .switchMap(action =>
+      getJSON('http://gg.com')
+        .map(response =>
+          pauseItemSuccess(action.payload)
+        )
     )
 }
 
@@ -59,7 +74,16 @@ function items(state = {}, action) {
         ...state,
         [action.payload]: {
           ...state[action.payload],
-          status: 'paused'
+          loading: true
+        }
+      }
+    case 'PAUSE_ITEM_SUCCESS':
+      return {
+        ...state,
+        [action.payload]: {
+          ...state[action.payload],
+          status: 'paused',
+          loading: false
         }
       }
     default:
@@ -83,6 +107,7 @@ describe('Items and Item', () => {
     ,
     <Pause
       id={'1'} onClick={pauseItem}
+      loading={state.items['1'] && state.items['1'].loading}
       />
   ]))
 
@@ -97,14 +122,24 @@ describe('Items and Item', () => {
         2: { id: 2, name: 'Bar', date: 'November' }
       }
     })
+    .view(wrapper =>
+      expect(wrapper.find(Item).length).toEqual(2)
+    )
 
   .switch(Item)
     .toMatchProps({ item:
-      { id:1, name: 'Foo', date: 'March' }
+      { id: 1, name: 'Foo', date: 'March' }
     })
 
   .switch(Pause)
     .action(props => props.onClick(1)) // pause item with id 1
+  .it('should show loading on Pause button')
+    .toMatchProps({ loading: true })
+    .epic(handlePausItem, { getJSON: () =>
+      Observable.of({})
+    })
+  .it('should hide loading')
+    .toMatchProps({ loading: false })
 
   .switch(Item)
     .toMatchProps({ item:
