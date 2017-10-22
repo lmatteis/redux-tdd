@@ -98,15 +98,15 @@ describe('Items and Item', () => {
       }
     })
 
-  .switch(1)
+  .switch(Item)
     .toMatchProps({ item:
       { id:1, name: 'Foo', date: 'March' }
     })
 
-  .switch(2)
+  .switch(Pause)
     .action(props => props.onClick(1)) // pause item with id 1
 
-  .switch(1)
+  .switch(Item)
     .toMatchProps({ item:
       { id: 1, name: 'Foo', date: 'March', status: 'paused' }
     })

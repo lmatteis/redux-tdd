@@ -5,13 +5,29 @@ import { shallow } from 'enzyme';
 class ReduxTdd {
   constructor(reducers, render) {
     this.currentAction = null;
-    this.currentIdx = 0;
+    this.currentKey = 0;
 
     this.reducer = combineReducers(reducers);
     this.state = this.reducer(undefined, { type: '@@redux/INIT'});
     this.render = render;
-    this.components = render(this.state);
-    this.wrappers = this.components.map(c => shallow(c))
+    this.components = render(this.state); // [ <Component1 />, <Component2 /> ]
+    this.wrappers = this.components.reduce((acc, curr) =>
+      ({
+        ...acc,
+        [curr.type.name]: shallow(curr)
+      })
+      //shallow(c)
+    , {}) // { 'Component1' -> shallow(Component1) }
+  }
+
+  getCurrentWrapper() {
+    if (typeof this.currentKey === 'number') { // .switch(1)
+      return this.wrappers[Object.keys(this.wrappers)[this.currentKey]];
+    } else if (typeof this.currentKey === 'string') { // .switch('Foo')
+      return this.wrappers[this.currentKey];
+    } else if (typeof this.currentKey === 'function') { // .switch(Foo)
+      return this.wrappers[this.currentKey.name];
+    }
   }
 
   it(str) {
@@ -19,13 +35,13 @@ class ReduxTdd {
     return this;
   }
 
-  switch(idx) {
-    this.currentIdx = idx;
+  switch(key) {
+    this.currentKey = key;
     return this;
   }
 
   action(fn) {
-    const action = fn(props(this.wrappers[this.currentIdx]));
+    const action = fn(props(this.getCurrentWrapper()));
     this.currentAction = action;
 
     // check if the action object is handled in reducer
@@ -35,11 +51,9 @@ class ReduxTdd {
     this.state = newState;
 
     // second: update views
-    if (Array.isArray(this.wrappers)) {
-      this.wrappers.forEach((wrapper, idx) =>
-        wrapper.setProps(this.render(this.state)[idx].props)
-      );
-    }
+    Object.keys(this.wrappers).forEach((key, idx) =>
+      this.wrappers[key].setProps(this.render(this.state)[idx].props)
+    );
 
     return this;
   }
@@ -66,21 +80,21 @@ class ReduxTdd {
 
   contains(arg, truthy = true) {
     if (truthy) {
-      expect(this.wrappers[this.currentIdx].containsMatchingElement(arg)).toBeTruthy();
+      expect(this.getCurrentWrapper().containsMatchingElement(arg)).toBeTruthy();
     } else {
-      expect(this.wrappers[this.currentIdx].containsMatchingElement(arg)).toBeFalsy();
+      expect(this.getCurrentWrapper().containsMatchingElement(arg)).toBeFalsy();
     }
 
     return this;
   }
 
   view(fn) {
-    fn(this.wrappers[this.currentIdx]);
-    return this; 
+    fn(this.getCurrentWrapper());
+    return this;
   }
 
   toMatchProps(obj) {
-    expect(this.wrappers[this.currentIdx].instance().props).toMatchObject(obj);
+    expect(this.getCurrentWrapper().instance().props).toMatchObject(obj);
     return this;
   }
 }
