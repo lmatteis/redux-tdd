@@ -2,7 +2,7 @@
 
 ### Install
 
-`npm install --save redux-tdd`
+`npm install --save-dev redux-tdd`
 
 ```js
 import reduxTdd from 'redux-tdd';
@@ -21,6 +21,8 @@ reduxTdd({ counter: counterReducer }, state => [
 
 ### About
 
-Read more about this technique in our freeCodeCamp article: https://medium.freecodecamp.org/test-driven-development-with-react-and-redux-using-redux-tdd-3fd3be299918
+Check out my HOW-TO article on Hacker Noon: https://hackernoon.com/redux-tdd-a-deep-dive-344cd7682a54
+
+Also you can read more about this technique in our freeCodeCamp article: https://medium.freecodecamp.org/test-driven-development-with-react-and-redux-using-redux-tdd-3fd3be299918
 
 Also to learn more in depth how to use Redux TDD please look inside the `/test` folder.
