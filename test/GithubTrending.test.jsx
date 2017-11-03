@@ -141,6 +141,7 @@ describe('<GithubTrending />', () => {
   .epic(handleRefreshEpic, { getJSON: () =>
     Observable.throw({ error: 'Some error' })
   })
+  
   .toMatchProps({
     loading: false,
     projects: [],
@@ -148,6 +149,11 @@ describe('<GithubTrending />', () => {
   .contains(views.noProjects)
 
   .it('should test that Error component got right error message')
+  // consume the second action emitted by observable
+  .action((props, epicAction) => {
+    expect(epicAction).toMatchObject({ type: 'ERROR', payload: { error: 'Some error' } })
+    return epicAction
+  })
   .switch(1)
   .toMatchProps({
     message: 'Some error'

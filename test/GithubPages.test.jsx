@@ -73,11 +73,15 @@ function selectPageAction(pageIdx) {
 
 function handleRefreshEpic(action$, store, { getJSON }) {
   return action$.ofType('REFRESH')
-    .mergeMap(() =>
-      getJSON('http://foo.bar')
+    .mergeMap(() => {
+      const state = store.getState()
+      return getJSON('http://foo.bar')
         .map(response => refreshDoneAction(response))
-        .catch(err => Observable.of(refreshFailAction(err)))
-    );
+        .catch(err =>  {
+          err.error += state.loading // just append something from state to test 
+          return Observable.of(refreshFailAction(err))
+        })
+    });
 }
 
 function getPages(state) {
@@ -113,11 +117,11 @@ describe('GithubPages', () => {
     .contains(<Item />, false)
 
   .it('should click on refresh button')
-    .switch(2) // RefreshButton
+    .switch(RefreshButton)
     .action(props => props.onClick())
 
   .it('should show loading')
-    .switch(1) // Loading
+    .switch(Loading)
     .toMatchProps({ loading: true })
 
   .it('should trigger a successful HTTP response')
@@ -128,40 +132,38 @@ describe('GithubPages', () => {
     })
 
   .it('should show items based on the number of page selected')
-    .switch(0)
+    .switch(List)
     .toMatchProps({ items: [
       { name: 'redux-tdd' }, { name: 'redux-cycles' }
     ]})
 
   .it('should hide loading')
-    .switch(1)
+    .switch(Loading)
     .toMatchProps({ loading: false })
 
   .it('should render correct amount of pages')
-    .switch(4)
+    .switch(Pages)
     .toMatchProps({ pages: [0, 1] })
 
   .it('should select second page (index 1)')
     .action(props => props.onPageClick(1))
 
   .it('should show items based on second page')
-    .switch(0)
+    .switch(List)
     .toMatchProps({ items: [
       { name: 'foo bar' }
     ]})
 
   .it('should trigger an error response')
-    .switch(2) // RefreshButton
+    .switch(RefreshButton)
     .action(props => props.onClick())
     .epic(handleRefreshEpic, { getJSON: () =>
       Observable.throw({ error: 'Some error' })
     })
 
   .it('should test that Error component got right error message')
-    .switch(3)
+    .switch(Error)
     .toMatchProps({
-      message: 'Some error'
+      message: 'Some errortrue'
     })
-
-
 })

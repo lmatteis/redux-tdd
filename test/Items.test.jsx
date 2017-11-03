@@ -126,22 +126,27 @@ describe('Items and Item', () => {
       expect(wrapper.find(Item).length).toEqual(2)
     )
 
-  .switch(Item)
+  .it('should test our Item got the right prop')
+    .switch(Item)
     .toMatchProps({ item:
       { id: 1, name: 'Foo', date: 'March' }
     })
 
-  .switch(Pause)
-    .action(props => props.onClick(1)) // pause item with id 1
+  .it('should pause item with id 1')
+    .switch(Pause)
+    .action(props => props.onClick(1))
+
   .it('should show loading on Pause button')
     .toMatchProps({ loading: true })
     .epic(handlePausItem, { getJSON: () =>
       Observable.of({})
     })
+
   .it('should hide loading')
     .toMatchProps({ loading: false })
 
-  .switch(Item)
+  .it('should test that our item recieved the correct "paused" status')
+    .switch(Item)
     .toMatchProps({ item:
       { id: 1, name: 'Foo', date: 'March', status: 'paused' }
     })
