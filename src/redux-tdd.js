@@ -6,6 +6,7 @@ class ReduxTdd {
   constructor(reducers, render) {
     this.currentAction = null;
     this.currentKey = 0;
+    this.epicActions = [];
 
     this.reducer = combineReducers(reducers);
     this.state = this.reducer(undefined, { type: '@@redux/INIT'});
@@ -41,7 +42,7 @@ class ReduxTdd {
   }
 
   action(fn) {
-    const action = fn(props(this.getCurrentWrapper()));
+    const action = fn(props(this.getCurrentWrapper()), this.epicActions.shift());
     this.currentAction = action;
 
     // check if the action object is handled in reducer
@@ -65,14 +66,19 @@ class ReduxTdd {
 
   epic(epicFn, dependencies) {
     const action$ = ActionsObservable.of(this.currentAction);
-    const store = null;
+    const store = {
+      getState: () => this.state
+    };
 
     epicFn(action$, store, dependencies)
       .toArray() // buffers all emitted actions until your Epic naturally completes()
       .subscribe(actions => {
-        actions.forEach(action =>
-          this.action(() => action)
-        )
+        // only run automatically the first one
+        actions.forEach((action, idx) =>
+          idx === 0 && this.action(() => action)
+        );
+        actions.shift()
+        this.epicActions = actions;
       });
 
     return this;
