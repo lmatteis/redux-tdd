@@ -5,7 +5,7 @@
 `npm install --save-dev redux-tdd`
 
 
-Also, redux-observable is a peer-dependency so make sure you have it installed before you use Redux TDD: `npm install redux-observable --save-dev`
+Also, redux-observable is a peer-dependency so make sure you have it installed before you use Redux TDD: `npm install  --save-dev redux-observable`
 
 ### Example
 
@@ -116,7 +116,7 @@ reduxTdd({ items }, state => ([
     })
 ```
 
-`.epic()` works similar to `.action()` in the sense that it will dispatch the action return by the epic, so you can chain `.toMatchProps()` after it to assert things about your components.
+`.epic()` works similar to the `.action()` operator, in the sense that it will dispatch the action returned by the epic, so you can chain `.toMatchProps()` after it to assert things about your components.
 
 ### Handling multiple async actions dispatched
 
@@ -133,7 +133,7 @@ function handleRefreshEpic(action$, store, { getJSON }) {
 }
 ```
 
-As you can see, this epic above will dispatch two actions if an error occurs. To test this in Redux TDD we can the first action (`refreshFailAction`) as we did before:
+As you can see, this epic above will dispatch two actions if an error occurs. To test this in Redux TDD we can test the first action (`refreshFailAction`) as we did before:
 
 ```js
 .it('should click refresh and simulate http error response')
@@ -147,7 +147,7 @@ As you can see, this epic above will dispatch two actions if an error occurs. To
   })
 ```
 
-And to test the second error (`setErrorAction`), we can call `.action()` again and use its second parameter to access the epicAction in the pipe. If your epic would return a third action, you can call .action again and things would be automatically shifted from the internal pipeline.
+And to test the second action (`setErrorAction`), we can call `.action()` again and use its second parameter to access the epicAction in the pipe. If your epic would return a third action, you can call .action again and things would be automatically shifted from the internal pipeline.
 
 ```js
   // consume the second action emitted by observable
